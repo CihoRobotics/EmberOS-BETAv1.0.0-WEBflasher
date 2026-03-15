@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ember OS — Web Installer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js"></script>
+<style>
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --red:      #E84040;
+  --red-soft: rgba(232,64,64,0.12);
+  --red-line: rgba(232,64,64,0.25);
+  --bg:       #080808;
+  --s1:       #0e0e0e;
+  --s2:       #141414;
+  --s3:       #1a1a1a;
+  --b1:       #222;
+  --b2:       #2e2e2e;
+  --t4:       #444;
+  --t6:       #666;
+  --t9:       #999;
+  --tc:       #ccc;
+  --white:    #f0f0f0;
+  --green:    #3fb950;
+  --display:  'Syne', sans-serif;
+  --mono:     'DM Mono', monospace;
+}
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--mono);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* subtle top glow only */
+body::before {
+  content: '';
+  position: fixed;
+  top: -200px; left: 50%;
+  transform: translateX(-50%);
+  width: 700px; height: 400px;
+  background: radial-gradient(ellipse, rgba(232,64,64,0.05) 0%, transparent 70%);
+  pointer-events: none; z-index: 0;
+}
+
+.page {
+  position: relative; z-index: 1;
+  max-width: 820px; margin: 0 auto;
+  padding: 0 32px 120px;
+}
+
+/* ── NAV ── */
+nav {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 36px 0 32px;
+  border-bottom: 1px solid var(--b1);
+  margin-bottom: 80px;
+}
+
+.logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+
+.logo-icon {
+  width: 34px; height: 34px;
+  background: var(--red);
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+  box-shadow: 0 0 20px rgba(232,64,64,0.35);
+}
+
+.logo-text {
+  font-family: var(--display);
+  font-size: 15px; font-weight: 700;
+  color: var(--white); letter-spacing: -0.3px;
+}
+
+.logo-text span { color: var(--red); }
+
+.nav-right { display: flex; gap: 8px; }
+
+.nbtn {
+  font-family: var(--mono);
+  font-size: 10px; color: var(--t6);
+  text-decoration: none;
+  padding: 8px 14px;
+  border: 1px solid var(--b1);
+  border-radius: 6px;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+
+.nbtn:hover { border-color: var(--b2); color: var(--tc); }
+.nbtn.hi { background: var(--red); border-color: var(--red); color: #fff; }
+.nbtn.hi:hover { background: #f05050; box-shadow: 0 2px 16px rgba(232,64,64,0.4); }
+
+/* ── HERO ── */
+.hero { margin-bottom: 80px; }
+
+.hero-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--red); margin-bottom: 24px;
+}
+
+.hero-label::before {
+  content: '';
+  width: 20px; height: 1px; background: var(--red);
+}
+
+h1 {
+  font-family: var(--display);
+  font-size: clamp(40px, 7.5vw, 68px);
+  font-weight: 800;
+  line-height: 1.0;
+  letter-spacing: -2.5px;
+  color: var(--white);
+  margin-bottom: 20px;
+}
+
+h1 span { color: var(--red); }
+
+.hero-sub {
+  font-size: 13px; color: var(--t6);
+  line-height: 1.85; max-width: 500px;
+  margin-bottom: 32px;
+}
+
+.tag-row { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.tag {
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 5px 12px; border-radius: 3px;
+  border: 1px solid var(--b1); color: var(--t6);
+  font-family: var(--mono);
+}
+
+.tag.r { border-color: var(--red-line); color: var(--red); }
+.tag.g { border-color: rgba(63,185,80,0.25); color: var(--green); }
+
+/* ── SECTION HEADER ── */
+.sec {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 20px;
+}
+
+.sec-num {
+  font-family: var(--mono);
+  font-size: 10px; color: var(--red); letter-spacing: 1px;
+}
+
+.sec-title {
+  font-family: var(--display);
+  font-size: 15px; font-weight: 600;
+  color: var(--white); letter-spacing: -0.3px;
+}
+
+.sec-line { flex: 1; height: 1px; background: var(--b1); }
+
+/* ── BOARD GRID ── */
+.boards {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 10px; margin-bottom: 10px;
+}
+
+.bcard {
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-radius: 10px;
+  padding: 20px 20px 18px;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative; overflow: hidden;
+}
+
+.bcard::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: var(--red);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease;
+}
+
+.bcard:hover { border-color: var(--b2); }
+.bcard:hover::before { transform: scaleX(0.4); }
+
+.bcard.sel {
+  border-color: var(--red-line);
+  background: var(--red-soft);
+}
+
+.bcard.sel::before { transform: scaleX(1); }
+
+.bc-check {
+  position: absolute; top: 12px; right: 12px;
+  width: 18px; height: 18px; border-radius: 50%;
+  background: var(--red);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 9px; color: #fff;
+  opacity: 0; transform: scale(0.5);
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.bcard.sel .bc-check { opacity: 1; transform: scale(1); }
+
+.bc-icon {
+  width: 40px; height: 40px;
+  background: var(--s2);
+  border: 1px solid var(--b1);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; margin-bottom: 14px;
+  transition: border-color 0.2s;
+}
+
+.bcard.sel .bc-icon { border-color: var(--red-line); }
+
+.bc-name {
+  font-family: var(--display);
+  font-size: 13px; font-weight: 600;
+  color: var(--white); margin-bottom: 3px;
+}
+
+.bc-chip { font-size: 10px; color: var(--t6); margin-bottom: 12px; }
+
+.bc-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+
+.bc-tag {
+  font-size: 8px; letter-spacing: 1px; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 3px;
+  border: 1px solid var(--b2); color: var(--t4);
+  font-family: var(--mono);
+}
+
+.bc-tag.r { border-color: var(--red-line); color: var(--red); }
+.bc-tag.g { border-color: rgba(63,185,80,0.2); color: var(--green); }
+
+/* ── FLASH PANEL ── */
+.fpanel {
+  background: var(--s1);
+  border: 1px solid var(--b1);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.fpanel-inner { padding: 28px 28px 24px; }
+
+.fpanel-idle {
+  display: flex; align-items: center; gap: 14px;
+  padding: 24px 0;
+}
+
+.fpanel-idle-icon {
+  width: 36px; height: 36px;
+  border: 1px dashed var(--b2);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px; opacity: 0.4; flex-shrink: 0;
+}
+
+.fpanel-idle-text { font-size: 11px; color: var(--t4); letter-spacing: 0.3px; }
+
+.fpanel-ready { display: none; }
+
+.board-pill {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--s2); border: 1px solid var(--b2);
+  border-radius: 6px; padding: 10px 16px;
+  margin-bottom: 20px;
+  font-size: 11px;
+}
+
+.board-pill-label { color: var(--t6); }
+.board-pill-sep   { color: var(--b2); }
+.board-pill-name  { color: var(--white); font-weight: 500; }
+
+.board-pill-status {
+  margin-left: auto;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 6px var(--red);
+  animation: blink 1.8s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+
+.factions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+
+/* esp-web-install-button */
+.flash-btn {
+  font-family: var(--mono) !important;
+  font-size: 11px !important; font-weight: 500 !important;
+  letter-spacing: 1px !important;
+  padding: 12px 24px !important;
+  border-radius: 7px !important;
+  background: var(--red) !important;
+  color: #fff !important; border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 16px rgba(232,64,64,0.3) !important;
+  transition: all 0.2s !important;
+}
+
+.flash-btn:hover {
+  background: #f05050 !important;
+  box-shadow: 0 4px 24px rgba(232,64,64,0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
+.manual-btn {
+  font-family: var(--mono);
+  font-size: 10px; color: var(--t6);
+  text-decoration: none;
+  padding: 12px 18px;
+  border: 1px solid var(--b1);
+  border-radius: 7px;
+  transition: all 0.2s;
+  display: inline-flex; align-items: center; gap: 6px;
+}
+
+.manual-btn:hover { border-color: var(--b2); color: var(--tc); }
+
+.fnote {
+  margin-top: 18px;
+  padding: 12px 16px;
+  background: rgba(255,193,7,0.04);
+  border: 1px solid rgba(255,193,7,0.12);
+  border-radius: 7px;
+  display: flex; gap: 10px;
+}
+
+.fnote-icon { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+.fnote-text { font-size: 10px; color: var(--t6); line-height: 1.65; }
+.fnote-text strong { color: var(--t9); }
+
+/* ── AFTER STEPS ── */
+.after-grid {
+  display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+  margin-bottom: 10px;
+}
+
+.astep {
+  background: var(--s1); border: 1px solid var(--b1);
+  border-radius: 10px; padding: 20px 18px;
+}
+
+.astep-n {
+  font-family: var(--display);
+  font-size: 11px; font-weight: 700; color: var(--red);
+  letter-spacing: 1px; margin-bottom: 12px; display: block;
+}
+
+.astep-h {
+  font-family: var(--display);
+  font-size: 12px; font-weight: 600; color: var(--tc);
+  margin-bottom: 7px;
+}
+
+.astep-b { font-size: 10px; color: var(--t6); line-height: 1.7; }
+
+.code-val {
+  display: inline-block; margin-top: 6px;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--red); background: var(--red-soft);
+  border: 1px solid var(--red-line);
+  padding: 3px 9px; border-radius: 4px;
+  letter-spacing: 0.5px;
+}
+
+/* ── STATS ── */
+.stats {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  border: 1px solid var(--b1); border-radius: 10px;
+  overflow: hidden; margin: 64px 0;
+}
+
+.stat {
+  padding: 28px 20px; text-align: center;
+  border-right: 1px solid var(--b1);
+}
+
+.stat:last-child { border-right: none; }
+
+.stat-v {
+  font-family: var(--display);
+  font-size: 26px; font-weight: 800; letter-spacing: -1px;
+  color: var(--red); display: block; margin-bottom: 6px;
+}
+
+.stat-k { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--t4); }
+
+/* ── FAQ ── */
+.faq { border-bottom: 1px solid var(--b1); padding: 20px 0; }
+.faq-q { font-family: var(--display); font-size: 12px; font-weight: 600; color: var(--tc); margin-bottom: 8px; }
+.faq-a { font-size: 11px; color: var(--t6); line-height: 1.8; }
+.faq-a a { color: var(--red); text-decoration: none; }
+.faq-a a:hover { text-decoration: underline; }
+.faq-a strong { color: var(--t9); }
+
+/* ── BROWSER WARN ── */
+#bwarn {
+  display: none; margin-bottom: 24px;
+  background: rgba(232,64,64,0.06);
+  border: 1px solid var(--red-line);
+  border-radius: 8px; padding: 14px 18px;
+  font-size: 11px; color: var(--t9); line-height: 1.6;
+}
+#bwarn strong { color: var(--red); }
+
+/* ── FOOTER ── */
+footer {
+  margin-top: 64px; padding-top: 24px;
+  border-top: 1px solid var(--b1);
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px;
+}
+
+.fl { font-size: 10px; color: var(--t4); }
+.fl strong { color: var(--t6); }
+.fr { font-size: 9px; color: var(--t4); letter-spacing: 1.5px; text-transform: uppercase; }
+
+/* ── Reveal ── */
+.reveal {
+  opacity: 0; transform: translateY(14px);
+  animation: rv 0.5s ease forwards;
+}
+
+@keyframes rv { to { opacity: 1; transform: translateY(0); } }
+
+.d0{animation-delay:0s} .d1{animation-delay:.08s} .d2{animation-delay:.16s}
+.d3{animation-delay:.24s} .d4{animation-delay:.32s} .d5{animation-delay:.4s}
+
+@media(max-width:580px){
+  .boards{grid-template-columns:1fr;}
+  .after-grid{grid-template-columns:1fr;}
+  .stats{grid-template-columns:repeat(2,1fr);}
+  h1{letter-spacing:-1.5px;}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- NAV -->
+  <nav class="reveal d0">
+    <a href="#" class="logo">
+      <div class="logo-icon">🔥</div>
+      <div class="logo-text"><span>Ember</span> OS</div>
+    </a>
+    <div class="nav-right">
+      <a href="https://github.com/CihoRobotics/EmberOS-BETAv1.0.0/blob/main/EmberOS_UserManual.pdf" target="_blank" class="nbtn">📄 Manual</a>
+      <a href="https://github.com/CihoRobotics/EmberOS" target="_blank" class="nbtn hi">★ GitHub</a>
+    </div>
+  </nav>
+
+  <!-- Browser warning -->
+  <div id="bwarn">
+    <strong>⚠ Unsupported Browser — </strong>
+    Requires <strong>Google Chrome</strong> or <strong>Microsoft Edge</strong> 89+.
+    Firefox and Safari cannot access USB serial ports.
+  </div>
+
+  <!-- HERO -->
+  <div class="hero reveal d1">
+    <div class="hero-label">Web Installer — No Arduino IDE needed</div>
+    <h1>Flash <span>Ember OS</span><br>in 60 seconds.</h1>
+    <p class="hero-sub">
+      Pick your board, plug in your USB cable, and click install.
+      Every library, every feature — compiled into a single binary
+      and written directly to your chip. Nothing else required.
+    </p>
+    <div class="tag-row">
+      <span class="tag r">⚡ Live flashing</span>
+      <span class="tag g">✓ Free forever</span>
+      <span class="tag">ESP Web Tools</span>
+      <span class="tag">GPL-3.0</span>
+    </div>
+  </div>
+
+  <!-- STEP 1 — BOARD -->
+  <div class="sec reveal d2">
+    <span class="sec-num">01 —</span>
+    <span class="sec-title">Select your board</span>
+    <div class="sec-line"></div>
+  </div>
+
+  <div class="boards reveal d2">
+
+    <div class="bcard" id="bc-wroom" onclick="pick('wroom','ESP32 WROOM',this)">
+      <div class="bc-check">✓</div>
+      <div class="bc-icon">🟥</div>
+      <div class="bc-name">ESP32 WROOM</div>
+      <div class="bc-chip">WROOM-32 / 32D / 32U</div>
+      <div class="bc-tags">
+        <span class="bc-tag r">Popular</span>
+        <span class="bc-tag">Classic</span>
+      </div>
+    </div>
+
+    <div class="bcard" id="bc-c3" onclick="pick('c3','ESP32 C3',this)">
+      <div class="bc-check">✓</div>
+      <div class="bc-icon">🟧</div>
+      <div class="bc-name">ESP32 C3</div>
+      <div class="bc-chip">SuperMini / Mini / Any C3</div>
+      <div class="bc-tags">
+        <span class="bc-tag r">$1 chip</span>
+        <span class="bc-tag g">Cheapest</span>
+      </div>
+    </div>
+
+    <div class="bcard" id="bc-s3" onclick="pick('s3','ESP32 S3',this)">
+      <div class="bc-check">✓</div>
+      <div class="bc-icon">🟨</div>
+      <div class="bc-name">ESP32 S3</div>
+      <div class="bc-chip">SuperMini / DevKit / N16R8</div>
+      <div class="bc-tags">
+        <span class="bc-tag r">Most powerful</span>
+      </div>
+    </div>
+
+
+
+  </div>
+
+  <!-- STEP 2 — FLASH -->
+  <div class="sec reveal d3">
+    <span class="sec-num">02 —</span>
+    <span class="sec-title">Flash the firmware</span>
+    <div class="sec-line"></div>
+  </div>
+
+  <div class="fpanel reveal d3">
+    <div class="fpanel-inner">
+
+      <div class="fpanel-idle" id="f-idle">
+        <div class="fpanel-idle-icon">⚡</div>
+        <div class="fpanel-idle-text">Select a board above to continue</div>
+      </div>
+
+      <div class="fpanel-ready" id="f-ready">
+        <div class="board-pill">
+          <span class="board-pill-label">Board</span>
+          <span class="board-pill-sep">—</span>
+          <span class="board-pill-name" id="pill-name">—</span>
+          <div class="board-pill-status"></div>
+        </div>
+
+        <div class="factions" id="factions">
+          <!-- button injected by JS -->
+          <a href="https://github.com/CihoRobotics/EmberOS-BETAv1.0.0/blob/main/EmberOS_UserManual.pdf"
+             target="_blank" class="manual-btn">📄 User Manual</a>
+        </div>
+
+        <div class="fnote">
+          <span class="fnote-icon">⚠️</span>
+          <span class="fnote-text">
+            If your board does not appear, hold <strong>BOOT</strong> while clicking Install.
+            Use a data USB cable — charge-only cables will not work.
+          </span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STEP 3 — AFTER -->
+  <div class="sec reveal d4">
+    <span class="sec-num">03 —</span>
+    <span class="sec-title">Connect and launch</span>
+    <div class="sec-line"></div>
+  </div>
+
+  <div class="after-grid reveal d4">
+    <div class="astep">
+      <span class="astep-n">STEP 01</span>
+      <div class="astep-h">Power on</div>
+      <div class="astep-b">Unplug and replug your board. Wait a few seconds for Ember OS to boot and broadcast its network.</div>
+    </div>
+    <div class="astep">
+      <span class="astep-n">STEP 02</span>
+      <div class="astep-h">Join WiFi</div>
+      <div class="astep-b">
+        Connect to the Ember OS hotspot from your phone or laptop.
+        <span class="code-val">EmberOS</span>
+        <span class="code-val">12345678</span>
+      </div>
+    </div>
+    <div class="astep">
+      <span class="astep-n">STEP 03</span>
+      <div class="astep-h">Open browser</div>
+      <div class="astep-b">
+        Navigate to the Ember OS address in any browser.
+        <span class="code-val">192.168.4.1</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats reveal d4">
+    <div class="stat"><span class="stat-v">$1</span><span class="stat-k">chip cost</span></div>
+    <div class="stat"><span class="stat-v">60s</span><span class="stat-k">to flash</span></div>
+    <div class="stat"><span class="stat-v">3</span><span class="stat-k">boards</span></div>
+    <div class="stat"><span class="stat-v">free</span><span class="stat-k">forever</span></div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="sec reveal d5">
+    <span class="sec-num">FAQ —</span>
+    <span class="sec-title">Common questions</span>
+    <div class="sec-line"></div>
+  </div>
+
+  <div class="reveal d5">
+    <div class="faq">
+      <div class="faq-q">Which browsers work?</div>
+      <div class="faq-a">Google Chrome and Microsoft Edge version 89 or newer. Firefox and Safari cannot access USB serial ports. A desktop or laptop is required — mobile will not work.</div>
+    </div>
+    <div class="faq">
+      <div class="faq-q">My board is not showing in the port list.</div>
+      <div class="faq-a">Hold the <strong>BOOT</strong> button while clicking Install. If it still does not show, your cable may be charge-only — try a different cable. You may also need a USB driver: search <strong>CP210x</strong> or <strong>CH340</strong> plus your OS name.</div>
+    </div>
+
+    <div class="faq">
+      <div class="faq-q">Where is the full documentation?</div>
+      <div class="faq-a">The complete user manual with all commands, sensor guides and wiring diagrams is at <a href="https://github.com/CihoRobotics/EmberOS-BETAv1.0.0/blob/main/EmberOS_UserManual.pdf" target="_blank">github.com/CihoRobotics/EmberOS</a>.</div>
+    </div>
+    <div class="faq">
+      <div class="faq-q">Is Ember OS free?</div>
+      <div class="faq-a">Yes. Fully open source under GPL-3.0. Everything is free at <a href="https://github.com/CihoRobotics/EmberOS" target="_blank">github.com/CihoRobotics/EmberOS</a>.</div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="reveal d5">
+    <div class="fl"><strong>Ember OS</strong> — by CihoRobotics · GPL-3.0 · v1.0.0 BETA</div>
+    <div class="fr">Open Source · Free Forever</div>
+  </footer>
+
+</div>
+
+<script>
+const MANIFESTS = {
+  wroom: 'manifest_wroom.json',
+  c3:    'manifest_c3.json',
+  s3:    'manifest_s3.json',
+
+};
+
+window.addEventListener('DOMContentLoaded', () => {
+  if (!('serial' in navigator)) document.getElementById('bwarn').style.display = 'block';
+});
+
+function pick(id, name, el) {
+  document.querySelectorAll('.bcard').forEach(c => c.classList.remove('sel'));
+  el.classList.add('sel');
+
+  document.getElementById('f-idle').style.display = 'none';
+  document.getElementById('f-ready').style.display = 'block';
+  document.getElementById('pill-name').textContent = name;
+
+  // Remove old button
+  const old = document.getElementById('fbtn');
+  if (old) old.remove();
+
+  const wrap = document.createElement('div');
+  wrap.id = 'fbtn';
+  wrap.innerHTML = `
+    <esp-web-install-button manifest="${MANIFESTS[id]}">
+      <button slot="activate" class="flash-btn">
+        ⚡ Install Ember OS
+      </button>
+    </esp-web-install-button>
+  `;
+
+  const actions = document.getElementById('factions');
+  actions.insertBefore(wrap, actions.firstChild);
+}
+</script>
+</body>
+</html>
